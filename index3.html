@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主任考試 3 層記憶卡</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        /* 卡片過渡動畫 */
+        .card-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+        }
+        
+        .fade-in {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased selection:bg-orange-300 selection:text-orange-900">
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-5xl mx-auto">
+        
+        <!-- Header -->
+        <header class="w-full flex justify-between items-center mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-white drop-shadow-md">
+                🎓 主任考試特訓卡
+            </h1>
+            <div class="bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full text-white font-semibold shadow-inner border border-white/40">
+                進度: <span id="progress-text">1 / 39</span>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-white/40 rounded-full h-2 mb-8 overflow-hidden shadow-inner">
+            <div id="progress-bar" class="bg-white h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <!-- Card Container -->
+        <div class="relative w-full aspect-[4/3] md:aspect-[16/9] max-h-[65vh] perspective-1000 group cursor-pointer" onclick="nextState()">
+            <div id="flashcard" class="w-full h-full bg-white rounded-3xl shadow-2xl p-6 md:p-12 flex flex-col items-center justify-center text-center card-transition fade-in border-4 border-white/50 backdrop-blur-lg relative overflow-hidden">
+                
+                <!-- 狀態標籤 (顯示目前是第幾層) -->
+                <div id="layer-badge" class="absolute top-4 left-4 bg-orange-100 text-orange-600 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm">
+                    第 1 層：題目
+                </div>
+
+                <!-- 點擊提示 -->
+                <div class="absolute bottom-4 right-4 text-gray-400 text-sm md:text-base animate-pulse flex items-center gap-1">
+                    點擊卡片翻頁 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
+                </div>
+
+                <!-- 卡片內容區 -->
+                <div id="card-content" class="w-full h-full flex items-center justify-center overflow-y-auto no-scrollbar">
+                    <!-- 內容將由 JS 動態填入 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="w-full grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+            <!-- 手機版：翻面放第一排佔滿寬度。電腦版：放在中間 -->
+            <button onclick="nextState()" class="col-span-2 md:col-span-1 md:col-start-2 bg-white text-orange-500 hover:bg-gray-50 font-bold py-3 md:py-4 px-2 rounded-xl md:rounded-2xl shadow-xl transition-all active:scale-95 text-base md:text-lg border-b-4 border-orange-200 flex items-center justify-center order-1 md:order-2">
+                🔄 翻面 (或點擊卡片)
+            </button>
+            <!-- 上一題與下一題 -->
+            <button onclick="prevCard()" class="col-span-1 md:col-start-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-1 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-sm md:text-lg flex items-center justify-center gap-1 md:gap-2 order-2 md:order-1">
+                ⬅️ 上一題
+            </button>
+            <button onclick="nextCard()" class="col-span-1 md:col-start-3 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-1 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-sm md:text-lg flex items-center justify-center gap-1 md:gap-2 order-3">
+                下一題 ➡️
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // 原始資料，已排除第11題，並將關鍵字整理好配上 Emoji，完整保留原文件文字不精簡
+        const rawData = [
+            {
+                id: 1,
+                title: "👑 第1題 | 教務主任 / 家長大會期初致詞",
+                mnemonic: "【叫我親爸】",
+                details: "• 🎯 叫(教)：教務理念（以學生為中心、扎根基礎學力）\n• ⚔️ 我(武)：三大武器（重點：數位科技、閱讀素養、雙語社團 ➡ 小口訣：讀數語/讀書語）\n• 🤝 親(親)：親師合作（家長是學校最重要的橋樑與堅強後盾）\n• 🏆 爸(霸)：共創霸業（親校攜手並進，陪伴孩子在快樂中營造卓越）"
+            },
+            {
+                id: 2,
+                title: "👑 第2題 | 輔導主任 / 學校志工大會致詞",
+                mnemonic: "【溫故知新】",
+                details: "• ☀️ 溫(溫)：溫暖守護（讚揚志工是學校與孩子最溫暖的守護天使）\n• 🛡️ 顧(顧)：三組照顧（列舉三組奉獻：導護護安全、閱讀啟智慧、輔導伴適性）\n• 🧱 知(支)：行政支持（保證不讓大家默默埋頭，主動回報、調配外部資源做靠山）\n• ❤️ 新(心)：共築新心（親師溝通更有溫度，降低家長焦慮，攜手守護校園）"
+            },
+            {
+                id: 3,
+                title: "👑 第3題 | 輔導主任 / 新住民親子營開幕",
+                mnemonic: "【同溫共融笑迎來】",
+                details: "• 👨‍👩‍👧‍👦 同(同)：愛心相同（來自不同國家、語言與文化，但父母對孩子的愛完全相同）\n• 🏠 溫(溫)：溫暖家庭（歡迎新住民加入，學校永遠敞開雙手當最溫暖的家）\n• 🌈 共(共)：多元共融（不同文化色彩讓學校更多元豐富，學會尊重與欣賞彼此）\n• 😊 迎(迎)：笑迎成長（透過活動像家庭聚會般互相認識，孩子帶著笑容與自信成長）"
+            },
+            {
+                id: 4,
+                title: "👑 第4題 | 主任 / 60週年校慶 / 校友會",
+                mnemonic: "【認親傳承】",
+                details: "• 🎖️ 認(認)：校友認同（校友會成立代表對母校的深厚認同與堅定支持）\n• 🫂 親(親)：親如家人（感謝學長姐願意投入心力與時間，促成這股珍貴的穩定力量）\n• 🔗 傳(串)：串聯三方（透過校友會串聯「校友、學校、社區」，凝聚最大教育資源）\n• 🎓 承(成)：成就學弟（經驗傳承、關心學弟妹成長，見證母校一甲子新里程碑）"
+            },
+            {
+                id: 5,
+                title: "👑 第5題 | 學務主任 / 交通安全全國賽",
+                mnemonic: "【肯定全力精緻保】",
+                details: "• 👍 肯(肯)：肯定付出（代表本市參賽，是市府對老師日常在班級與路口導護的高度肯定）\n• 💪 力(力)：行政出力（理解老師擔心減損備課時間，學務處絕對做後盾、扛起行政支援）\n• 💎 精(精)：精緻呈現（並非應付檢查，而是把平常就在做的好事與系統，精緻呈現出來）\n• 🛡️ 保(保)：實質保障（爭取學校榮譽更是為了落實安全，給每一個孩子平安回家的保障）"
+            },
+            {
+                id: 6,
+                title: "👑 第6題 | 教務主任 / 國語文全國賽",
+                mnemonic: "【肯定謝師宴穩賺】",
+                details: "• 🌟 肯(肯)：實力肯定（從校內、市賽一路脫穎而出站上全國舞台，實力與努力已獲肯定）\n• 🙏 謝(謝)：感謝指導與支持（特別感謝指導老師的耐心陪伴與指導，以及家長的默默支持）\n• 🧘 師(師)：拜己為師（把練習時的自己帶到現場，不盲目想名次，專注當下發揮實力）\n• 📈 穩(穩)：穩賺不賠（比賽有輸贏但成長無止息，交流視野與經歷就是無價收穫）"
+            },
+            {
+                id: 7,
+                title: "👑 第7題 | 輔導主任 / 社區樂齡開幕致詞",
+                mnemonic: "【活到老學習百家樂】",
+                details: "• 🔥 活(活)：長輩活力（讚譽長輩滿滿熱情與活力，讓教室充滿溫馨、年輕的氛圍）\n• 📚 學習(學習)：終身學習（敬佩「活到老、學到老」精神，卸下重擔願意走出門學新東西）\n• 🏫 家(家)：學校如家（打造無壓力、交朋友的溫馨天地，把學校當自己家常來走動）\n• 🎉 樂(樂)：快樂第一（沒有考試與分數壓力，無論手工藝或唱歌，快樂盡興是最大收穫）"
+            },
+            {
+                id: 8,
+                title: "👑 第8題 | 學務主任 / 六年級畢旅致詞",
+                mnemonic: "【擔憂放手互協助】",
+                details: "• 😟 擔(擔)：師長擔憂（點出老師與家長心裡對飲食、受傷與突發事件的擔心與牽掛）\n• 🕊️ 放(放)：放手體驗（旅行最大意義在於經驗累積與適應，帶著擔憂依然願意放手讓孩子成長）\n• 🤝 互(互)：同儕互助（在外必須同學間互相照顧、互相幫忙、互相提醒安全防禦）\n• 🆘 助(助)：尋求協助（遇到超過能力範圍的問題，務必立刻找導師與領隊協助解決）"
+            },
+            {
+                id: 9,
+                title: "🛡️ 第9題 | 學務主任 / 健康與安全上網",
+                mnemonic: "【可以給我隱私的時間嗎？怡卉拒絕三次】",
+                details: "• 🔒 隱私(隱私)：保護隱私（絕不透露姓名、生日、學校與帳密，如鎖好家門）\n• ⏳ 時間(時間)：控管時間（做網路主人，螢幕30分鐘休息10分鐘，保護視力）\n• 🧐 怡(疑)：保持懷疑（天下無白吃的午餐，查證網傳聳動新聞，防禦詐騙）\n• 🚫 拒(拒)：拒絕三不（不網路霸凌傷人、不盜用圖文觸法、不惡意肉搜曝光）"
+            },
+            {
+                id: 10,
+                title: "🛡️ 第10題 | 總務主任 / 愛惜公物與設備",
+                mnemonic: "【(公)文政愛通車】",
+                details: "• 🌍 公(公)：公德尊重（公物屬於全民，愛惜公物是品格的展現與對下一位使用者的尊重）\n• ✅ 政(正)：正確使用（遵守遊具與運動器材使用說明與老師指導，不爭搶、不危險推擠）\n• ❤️ 愛(愛)：愛惜歸位（借用的體育器材與圖書，用畢小心愛護並確實放回原位）\n• 📢 通(通)：主動通報（發現洗手台漏水、課桌椅與遊具鬆脫，立刻報告導師或填報修單）"
+            },
+            {
+                id: 12,
+                title: "🛡️ 第12題 | 學務主任 / 手機管理新制",
+                mnemonic: "【免交保急互動】",
+                details: "• 📵 免(免)：非必要免帶（原則上鼓勵孩子不帶手機到校，防範成癮與視力受損）\n• 📥 交(交)：關機繳交（若因通勤安全帶校，到校立刻關機並交由導師統一保管至放學）\n• 🚨 急(急)：緊急通聯（校內有急事可隨時用辦公室電話或導師代聯，家長可撥學校分機）\n• 🗣️ 動(動)：實體互動（初衷非刁難，而是引導專注學習並增加下課同學間的「實體互動」）"
+            },
+            {
+                id: 13,
+                title: "🛡️ 第13題 | 學務主任 / 電子菸危害防制",
+                mnemonic: "【雲雁獻聚寶盆】",
+                details: "• ☁️ 雲(雲)：吞雲吐霧，肺部破洞（以真實病例警告：化學藥水腐蝕肺部造成「肺塌陷」，終身無法復原）\n• 🪤 獻(陷阱)：糖衣陷阱（揭露不良商人口味偽裝：彩色筆、隨身碟外觀與水果甜味是毒藥陷阱）\n• 🙅 聚(拒)：堅定拒絕（防身術：任何人請客誘騙，用最堅定眼神搖頭大聲說「我不要！」）\n• 👮 寶(報)：立刻通報，保護自己（轉身離開後立刻向學務處、導師或健康中心護理師報告，學校保護你）"
+            },
+            {
+                id: 14,
+                title: "🛡️ 第14題 | 學務主任 / MeToo / 性平宣導",
+                mnemonic: "【自主尊重突破平權】",
+                details: "• 🛡️ 自主(自主)：身體自主（MeToo攸關隱私與身體自主權，任何人皆不可侵犯自己界線）\n• 🤝 尊重(尊重)：尊重特質（從「兩性」走向「性別」平等，尊重多元生理、性傾向與性別認同）\n• 🚀 突破(突破)：突破歧視（突破刻板性別角色與消除歧視，防制性騷擾、性侵害與性霸凌）\n• ⚖️ 平權(平權)：落實平權（銘記4月20日性平教育日，日常生活中實踐性別權益與尊重多元）"
+            },
+            {
+                id: 15,
+                title: "🛡️ 第15題 | 輔導主任 / 重大車禍 / 交安生命",
+                mnemonic: "【眼到心到愛相伴】",
+                details: "• 👀 眼(眼)：眼到看清（過馬路左、右、左看清，絕對不滑手機、不打鬧，舉起小手讓車看見）\n• 🧠 心(心)：心到專注（不走暗巷、不在危險馬路或店家門口追逐嬉戲，專心走路把心放在腳步）\n• ❤️ 愛(愛)：愛送關懷（如果同學因事件感到恐懼，給予微笑擁抱，用溫暖支持彼此）\n• 🫂 相(相)：輔導相伴（若心裡依然不安害怕，隨時到輔導室找主任與心理師聊聊天）"
+            },
+            {
+                id: 16,
+                title: "🛡️ 第16題 | 輔導主任 / 脆弱家庭 / 關懷通報",
+                mnemonic: "【導師扮支援】",
+                details: "• 🕵️ 導師(導師)：導師辨識警訊（導師是雷達，觀察「衛生缺漏、頻繁缺席、家變暴落、焦慮退縮」）\n• 🫂 扮(伴)：溫暖陪伴（老師不是解決經濟的超人，而是給予避風港的「溫暖陪伴與接納」）\n• 🔗 支(資)：引進資源（翻轉觀念：通報不是告狀，而是為家庭「合法引進政府與社福資源」）\n• 🏢 援(援)：學校支援（24小時內完成線上通報，輔導室與行政絕對做後盾、接手轉介協助）"
+            },
+            {
+                id: 17,
+                title: "🛡️ 第17題 | 輔導主任 / 言語霸凌 / 髒話宣導",
+                mnemonic: "【停三秒無傷拒救】",
+                details: "• ⏱️ 停三秒(停三秒)：說話後停三秒（停三秒換位思考：「若別人這樣對我說，我會不會難過？」）\n• 🩹 無(無)：無形傷口（言語看不到傷口卻能傷人很久；非由說者決定玩笑，而是聽者感受）\n• 🚫 拒(拒)：拒絕傷言（不說髒話、不取難聽綽號、不嘲笑外表家庭，不因沒動手就以為無害）\n• 🆘 救(救)：勇敢求救（遇到或看見辱罵排擠，向老師求助非告狀，而是保護自己與他人）"
+            },
+            {
+                id: 18,
+                title: "🛡️ 第18題 | 輔導主任 / 融合教育概念",
+                mnemonic: "【X鈺談班網】",
+                details: "• 🤝 X鈺(差異)：接納差異（不降低標準，透過合理調整與支持，讓多元與特需孩子共融學習）\n• 🧩 彈(彈)：彈性調整（普通班導師不用變特教專家，運用多元教材、分層教學與多元評量）\n• 🏫 班(班)：友善班風（透過同儕合作與同理心宣導，引導全班互助，欣賞不同成長步調）\n• 🕸️ 網(網)：團隊網絡（導師非孤軍奮戰！輔導室結合特教、教務建構資源網做堅強後盾）"
+            },
+            {
+                id: 19,
+                title: "🛡️ 第19題 | 輔導主任 / 兒童節情緒覺察與調節",
+                mnemonic: "【覺察STOP】",
+                details: "• 🔍 察(察)：接納覺察（情緒如天氣有晴雨，比考100分更重要是先說出並接住自己感受）\n• 🛑 S：Stop（停下來）（情緒調節技巧第一步：不急著說話、不衝動反應，先讓大腦暫停）\n• 🌬️ T：Take a breath（深呼吸）（慢吸慢吐連續三次，幫助神經與身體平靜放鬆、觀察感受）\n• 👁️ O：Observe（觀察自己的情緒與身體）\n• 🚶 P：Proceed（選擇適當行動）（選擇對己與人都好的做法：找老師幫忙、好好溝通或暫離現場）"
+            },
+            {
+                id: 20,
+                title: "🛡️ 第20題 | 教務主任 / 雙語政策規劃 / 團隊招募",
+                mnemonic: "【扎浸營盾】",
+                details: "• 🌱 扎(扎)：課程扎根（結合校訂語閱教育，外師負責語言、導師專注知識，雙語協同）\n• 🛁 浸(浸)：情境沉浸（晨光「英語角」低門檻遊戲闖關，將雙語化為日常溝通工具）\n• 🏕️ 營(營)：雙語營隊（寒暑假辦理生活營，透過繪本、戲劇與校外參訪創造真實體驗）\n• 🛡️ 盾(盾)：行政神盾（誠摯招募推動團隊，教務處保證提供經費、教材與行政最強後備）"
+            },
+            {
+                id: 21,
+                title: "🛡️ 第21題 | 教務主任 / 課發會 / 本土教育實施",
+                mnemonic: "【土地探究遊戲創意】",
+                details: "• 🗺️ 認(認)：土地認同（跳脫單向講述，核心目標在引導孩子對在地生長土地產生認同與連結）\n• 🔎 探(探)：專題探究（結合PBL專題，設計「尋找家鄉古早味/神探」，以問題串合作調查）\n• 🎮 遊(遊)：遊戲互動（融入競爭元素：用Kahoot!測驗、在地傳說做桌遊/卡牌，激發動機）\n• 💡 創(創)：行政創意發想（教務處作為資源庫，盤點數位工具與圖卡，安排共備時間創發新課）"
+            },
+            {
+                id: 22,
+                title: "🛡️ 第22題 | 教務主任 / 社群活動 / 校訂課程重點",
+                mnemonic: "【願景跨域滾動修】",
+                details: "• 🎯 願(願)：扣緊願景（校訂是學校靈魂，單元設計須對齊學校願景與學生圖像需求）\n• 🌉 跨(跨)：跨域素養（打破學科界線，設計情境化、脈絡化探究，解決真實生活問題）\n• 🔄 滾(滾)：滾動修正（重可行性與教師負擔，依評量表現與實務經驗「滾動式修正」）\n• 🛡️ 動(盾)：行政後盾（從單打到共創，教務處全力協助專家諮詢、排課協同與設備耗材）"
+            },
+            {
+                id: 23,
+                title: "🛡️ 第23題 | 教務主任 / 課發會 / 課程評鑑規劃",
+                mnemonic: "【檢定效應】",
+                details: "• ✂️ 檢(簡)：簡化聚焦（初衷非打分數考核，而是「簡化流程、聚焦實務」支持教師專業）\n• 📅 定(定)：定期檢視（融入學年與領域會議，期末對其教科書適用性、進度與素養評量）\n• ✨ 效(校)：校訂亮點（聚焦彈性學習表現與產出，挑選代表主題檢視是否符合學校願景）\n• 📈 應(應)：結果應用（回饋非具文！整合專業意見，作為下年課程調整與教學設備預算依據）"
+            },
+            {
+                id: 24,
+                title: "🏫 第24題 | 教務主任 / 導入AI輔助教學優化備課",
+                mnemonic: "【適時笑我】",
+                details: "• 🌊 適(勢)：大勢所趨（企業大舉引入AI以保競爭力，教育界也應引進現代化利器與新思維）\n• ⏱️ 時(時)：省時產出（輸入教學目標與對象，AI秒速產出教案、文案與評量，大幅節省心力）\n• 🚀 笑(效)：效能會議（舉例實益：開會/備課用語音轉文字、快速摘要，行政與備課高效率）\n• ❤️ 我(我)：願景自我(引伸)（解放繁瑣行政與文書耗時，把寶貴的熱情與時間還給「學生與自我」）"
+            },
+            {
+                id: 25,
+                title: "🏫 第25題 | 教務主任 / 備課日 / 跨域統整共備",
+                mnemonic: "【交集共備後盾成】",
+                details: "• ⭕ 交集(交集)：尋找交集（不硬湊！年段為單位攤開計畫找自然交集，如：社會歷史跨語文閱讀）\n• 👥 共備(共備)：集中共備（不增加開會負擔，行事曆預留4次專屬時間，聚焦目標、分工與反思）\n• 🛡️ 盾(盾)：行政後盾（排課協同、外部專家與教學媒材，教務處全力排除行政障礙）\n• 🏆 成(成)：賦能成就（從單打獨鬥走向團隊夥伴，成就老師、並讓孩子學會解決真實問題）"
+            },
+            {
+                id: 26,
+                title: "🏫 第26題 | 總務主任 / 通學步道 / 交通安全理念",
+                mnemonic: "【安全人本叫出來共】",
+                details: "• 🦺 安(安)：安全第一（改善路幅、防滑鋪面、照明與無障礙，警示號誌降低上下學人車風險）\n• 🚶 人(人)：以人為本（優先考量低年級、身障生與家長接送動線，便利安心進出校園）\n• 📣 叫(教)：教育融入（硬體即教具！請老師班級宣導停看聽與行穿線，將交安內化為日常）\n• 🤝 共(共)：社區共好（親師生與社區攜手共護，施工期配合臨時動線，打造永續安全步道）"
+            },
+            {
+                id: 27,
+                title: "🏫 第27題 | 總務主任 / 操場工程 / 暫停使用與安措",
+                mnemonic: "【換衣遠離慢步調】",
+                details: "• 👕 換(換)：換裝祝福（用同理心溫暖說明：操場圍籬是穿保護衣變漂亮，將不便化為祝福）\n• 🚧 離(離)：遠離圍籬（安全防線絕不靠近、不鑽越；球掉進去絕不伸手撈，立刻請總務處處理）\n• 🐢 慢(慢)：慢行勿嬉（施工區旁多器材，下課經過請放慢腳步，不追逐、不奔跑推擠）\n• 🧭 調(調)：調整動線（已協調各處室調整體育課與活動場地，水槽與廁所依新指示牌順利運行）"
+            },
+            {
+                id: 28,
+                title: "🏫 第28題 | 總務主任 / 新生座談會 / 校園安全防護",
+                mnemonic: "【點線面好寶貝】",
+                details: "• 📷 點(點)：智慧監控點（電子圍籬與高解析監視器防範死角，嚴格實名門禁，把關第一線）\n• 👮 線(線)：巡檢防護線（警衛、行政每日定時巡邏廁所頂樓，檢修照明遊具，確保步步安全）\n• 🏘️ 面(面)：社區合作面（結合警政、愛心商店與導護志工建構通學安全網，落實防震演練）\n• 😌 好(好)：家長好放心（展現「極度專業與溫暖承諾」，讓焦慮的新生家長放心將寶貝交託）"
+            },
+            {
+                id: 29,
+                title: "🏫 第29題 | 總務主任 / 朝會宣導 / 節能減碳減塑",
+                mnemonic: "【電解水要分類】",
+                details: "• 💡 電(電)：聰明用電（室溫28度開冷氣、定溫26-28搭配電扇；離班落實「關燈、扇、冷氣」）\n• 🛍️ 解(減)：全面減塑（校內禁一次性塑膠杯/碗/吸管，自備環保杯餐具與購物袋）\n• 🚰 水(水)：珍惜用水（落實節水洗手潔牙；發現龍頭滴水或馬桶漏水立刻通報總務處維修）\n• ♻️ 類(類)：精準分類（做好一般、回收、廚餘三分類，回收餐盒要沖洗乾淨防止孳生蚊蟲）"
+            },
+            {
+                id: 30,
+                title: "🏫 第30題 | 學務主任 / 導師聘任與班級經營原則",
+                mnemonic: "【肛溫通痔】",
+                details: "• ⚖️ 肛(公)：公平聘任（依聘任辦法由委員會秉持「公平、公正、公開、適才適所」綜合審議）\n• ☀️ 溫(溫)：溫暖正向（零體罰多引導！先落實情緒覺察與同理傾聽，學輔處室絕對當大靠山）\n• 🗣️ 通(通)：主動溝通（開學主動宣告理念常規；突發狀況「第一時間通報、誠意溝通」防誤解）\n• 👑 痔(治)：自治生活（引導學生7習慣自主管理，落實整潔、午餐、愛公物與3C自律常規）"
+            },
+            {
+                id: 31,
+                title: "🚨 第31題 | 發言人 / 午餐中毒疑似腹瀉嘔吐送醫",
+                mnemonic: "【送醫通報瘋找明蓉】",
+                details: "• 🚑 醫(醫)：緊急送醫（學生安全第一！立即打119、派導師行政陪伴就醫，同步通知安慰家長）\n• 📞 報(報)：通報分工（立即通報教育局與衛生局，成立緊急應變小組，單一窗口掌握資訊）\n• 📦 瘋(封)：封存檢體（立即停止供餐，封存今日餐點與留樣檢體，現場交由衛生局採驗）\n• 🔍 明(明)：透明責任（資訊公開透明不臆測；未來全面檢討採購驗收流程，有缺失必定追責）"
+            },
+            {
+                id: 32,
+                title: "🚨 第32題 | 發言人 / 掃地玩掃把致傷 / 家長控不當",
+                mnemonic: "【山茶花蓮舫】",
+                details: "• 🤕 山(傷)：傷者為重（專人協助醫療、保險與心理支持，以溫暖同理面對家長憤怒並檢討）\n• 🕵️ 茶(查)：客觀調查（成立小組訪談師生釐清過程，調查完成前不預設立場或指認肇事者）\n• 🤝 蓮(連)：主動連繫（主動聯繫肇事端家長出面配合，校方扮演橋樑協助雙方理性溝通協調）\n• 🚧 舫(防)：審慎預防（深刻檢討掃具管理、巡視規範與安全宣導，完善通報與預防機制）"
+            },
+            {
+                id: 33,
+                title: "🚨 第33題 | 發言人 / 廁所性霸凌脫褲 / 生畏懼拒學",
+                mnemonic: "【痛心通報輔導巡邏】",
+                details: "• 💔 痛(痛)：痛心遺憾（定調對受害學生深表痛心與歉意，宣示對校園性平與霸凌絕對「零容忍」）\n• 📝 報(報)：依法通報（第一時間完成校安與社政通報，召開性平會成立外聘小組，毋枉毋縱）\n• 🫂 輔(輔)：專業輔導（心理諮商師進駐平復創傷，提供彈性學習；對涉案生隔離並啟動輔導）\n• 🔦 巡(巡)：強化巡邏（加強廁所與校園死角巡邏密度，全面深化性平與反霸凌法治教育）"
+            },
+            {
+                id: 34,
+                title: "🚨 第34題 | 發言人 / 初任導師衝突 / 家長連署更換",
+                mnemonic: "【李半仙協調】",
+                details: "• ⚖️ 李(理)：理解保障（理解家長焦慮，但須兼顧學生受教權與教師工作權，不單方面貿然撤換）\n• 👨‍🏫 半(伴)：資深陪伴（啟動良師陪伴，安排教學與行政資深老師入班觀察與指導，精進管理）\n• 🤝 協(協)：行政協力（行政巡堂支援；校長行政陪同召開親師座談會，當面說明改善計畫）\n• 📋 調(調)：依法調處（給予合理改善期(兩個月)，若仍成效不彰或嚴重影響受教權，啟動校事會議依法調離解聘）"
+            },
+            {
+                id: 35,
+                title: "🚨 第35題 | 發言人 / 導護志工學生遭闖紅燈撞死傷",
+                mnemonic: "【衣服分岔請改善】",
+                details: "• 🏥 衣(醫)：醫療陪伴（校長赴醫院成立專責窗口，協助醫療理賠與罹難治喪，做最堅強後盾）\n• 🕯️ 福(輔)：悲傷輔導（結合市府輔導資源，次日對目擊班級與全校啟動悲傷輔導，安定校園）\n• 📊 分(分)：課務分擔（教務處提供休養生補救與代課；學務處專責平安險理賠，減輕導師壓力）\n• 🚦 善(善)：會勘改善（聯繫交通局與警方會勘肇事路口，改善號誌與行穿線，配合檢警追究肇責）"
+            },
+            {
+                id: 36,
+                title: "🚨 第36題 | 發言人 / 管樂指導老師性騷威脅女學生",
+                mnemonic: "【庭外新寶】",
+                details: "• 🛑 庭(停)：立即停職（危機處理第一步：立即停止該外聘老師一切教學，嚴禁接觸當事師生）\n• 🔎 外(外)：外聘調查（依性平法通報並召開性平會，全權移請「外聘專家小組」公正嚴查）\n• ❤️ 新(心)：心理創傷（輔導室編組心理師與社工師進行個別諮商，全心協助平復創傷）\n• 🛡️ 寶(保)：嚴格保護（確保在校環境隔離安全，若查實即嚴懲解聘、終身不聘並送司法偵辦）"
+            },
+            {
+                id: 37,
+                title: "🚨 第37題 | 發言人 / 桌球隊外聘教練體罰 / 驗傷單",
+                mnemonic: "【停～抱羅森倒立】",
+                details: "• 🚫 停(停)：停職關懷（深表痛心歉意一鞠躬！立即停職禁入校園，校長致歉並啟動專任輔導）\n• 📝 抱(報)：通報解約（通報教育與社政；尊重驗傷法律權益；查實立即解約並通報「不適任終身除名」）\n• 🕵️ 森(審)：嚴審資格（坦承行政督導疏漏，痛定思痛！即日起全面嚴格重新審查所有外聘人員）\n• 👮 倒(導)：強化督導（大幅增加團隊練習巡查頻率，建立直接透明申訴管道，重建安心校園）"
+            },
+            {
+                id: 38,
+                title: "🚨 第38題 | 發言人 / 網紅學生網路霸凌自傷未遂",
+                mnemonic: "【脫衣服查隱私】",
+                details: "• 🏥 醫(醫)：醫療協調（關切不捨，感謝醫療照護使生命無虞，與家長保持密切聯繫提供支持）\n• 🫂 服(輔)：危機輔導（成立關懷輔導小組，由心理師與輔導處介入，規劃返校彈性學照計畫）\n• 🔍 查(查)：調查霸凌（疑似霸凌已依規進行校安通報並啟動客觀調查，查明前不推測與預設立場）\n• 🤐 隱(隱)：呼籲隱私（呼籲媒體與大眾停止網傳揣測，保護兒少隱私避免二度傷害，強化網素教育）"
+            },
+            {
+                id: 39,
+                title: "🚨 第39題 | 發言人 / 圍牆樹木倒塌壓傷騎士垂危",
+                mnemonic: "【救救順辰貧戶】",
+                details: "• 🚑 救(救)：救助傷者（沉痛遺憾！派員現場處置，持續關心慰問傷者家屬，期盼早日脫險康復）\n• 🙇‍♂️ 辰(誠)：坦誠擔責（坦誠面對校園設施維護責任，全力配合警消調查釐清，絕不迴避責任）\n• 🌳 貧(評)：專業評估檢測（立即全面盤點校園與周邊樹木環境，邀請「植物專家」進行專業檢測與危樹評估）\n• 🛡️ 戶(護)：建置維護（建立完善巡查、修剪與強風預警機制，以高標準守護公共安全與社區共好）"
+            },
+            {
+                id: 40,
+                title: "🚨 第40題 | 發言人 / 4年級學生誤食毒油桐花籽中毒",
+                mnemonic: "【醫輕親雯宣】",
+                details: "• 🚑 醫(醫)：緊急醫療（校長陪同5生送醫，護理師初處處置、通知119與家長，完成校安通報）\n• 🧹 輕(清)：全面清除（對意外不適深表歉意！立即全面清除校園毒果種子，設置警示牌與封鎖）\n• 📋 親(清)：建立清冊（邀請植物專家檢視植栽，評估移除高風險或調整位置，建立「有毒植物清冊」）\n• 📢 宣(宣)：防護宣導（加強師生對有毒植物辨識與食安宣導，發布家長通知函共同強化安全防護）"
+            }
+        ];
+
+        let cards = [];
+        let currentIndex = 0;
+        let currentState = 0; // 0: 題目, 1: 口訣, 2: 細節
+
+        // Fisher-Yates Shuffle 洗牌演算法 (隨機打亂)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex > 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function init() {
+            cards = shuffle([...rawData]);
+            currentIndex = 0;
+            currentState = 0;
+            updateUI();
+        }
+
+        function updateUI() {
+            const card = cards[currentIndex];
+            const contentDiv = document.getElementById('card-content');
+            const flashcard = document.getElementById('flashcard');
+            const badge = document.getElementById('layer-badge');
+            
+            // 觸發淡出動畫
+            flashcard.classList.remove('fade-in');
+            flashcard.classList.add('fade-out');
+
+            // 等待淡出後更新內容並淡入
+            setTimeout(() => {
+                if (currentState === 0) {
+                    // 第 1 層：題號 + 題目 (字體放大)
+                    badge.innerText = "第 1 層：題目";
+                    badge.className = "absolute top-4 left-4 bg-blue-100 text-blue-700 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm";
+                    contentDiv.innerHTML = `<h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight px-4">${card.title}</h2>`;
+                } else if (currentState === 1) {
+                    // 第 2 層：記憶口訣 (字體放大，僅顯示括號內容)
+                    badge.innerText = "第 2 層：記憶口訣";
+                    badge.className = "absolute top-4 left-4 bg-orange-100 text-orange-600 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm";
+                    contentDiv.innerHTML = `<h2 class="text-5xl md:text-7xl font-black text-orange-600 tracking-widest drop-shadow-md">${card.mnemonic}</h2>`;
+                } else if (currentState === 2) {
+                    // 第 3 層：細節與重點 (完整呈現文件內容)
+                    badge.innerText = "第 3 層：關鍵字與重點";
+                    badge.className = "absolute top-4 left-4 bg-green-100 text-green-700 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm";
+                    
+                    // 將換行符號 \n 拆分成段落，忠於原始資料呈現
+                    const detailsList = card.details.split('\n').map(item => 
+                        `<li class="mb-4 text-left text-lg md:text-xl font-medium text-gray-700 leading-relaxed">${item}</li>`
+                    ).join('');
+                    
+                    contentDiv.innerHTML = `<ul class="w-full px-4 md:px-10 list-none">${detailsList}</ul>`;
+                }
+
+                // 更新進度條
+                document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${cards.length}`;
+                document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / cards.length) * 100}%`;
+
+                // 觸發淡入動畫
+                flashcard.classList.remove('fade-out');
+                flashcard.classList.add('fade-in');
+            }, 150);
+        }
+
+        function nextState() {
+            if (currentState < 2) {
+                currentState++;
+                updateUI();
+            } else {
+                nextCard();
+            }
+        }
+
+        function nextCard() {
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+                currentState = 0;
+                updateUI();
+            } else {
+                // 完成全部
+                const contentDiv = document.getElementById('card-content');
+                document.getElementById('layer-badge').style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h2 class="text-3xl md:text-5xl font-extrabold text-orange-600 mb-4">恭喜完成所有卡片！</h2>
+                        <p class="text-xl text-gray-600 mb-8">您已經複習完本輪所有重點。</p>
+                        <button onclick="location.reload()" class="bg-orange-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-orange-600 transition-all text-xl">
+                            重新開始測驗
+                        </button>
+                    </div>`;
+            }
+        }
+
+        function prevCard() {
+            if (currentState > 0) {
+                // 如果在第2層或第3層，先退回上一層
+                currentState--;
+                updateUI();
+            } else if (currentIndex > 0) {
+                // 如果在第1層，退回上一題的第3層
+                currentIndex--;
+                currentState = 2;
+                updateUI();
+            }
+        }
+
+        // 鍵盤操作支援
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowRight') {
+                e.preventDefault();
+                nextState();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                prevCard();
+            }
+        });
+
+        // 啟動應用程式
+        window.onload = init;
+    </script>
+</body>
+</html>
