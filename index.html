@@ -385,14 +385,26 @@
         </div>
     </div>
 
-    <!-- 引入 Reveal.js 腳本 -->
+<!-- 引入 Reveal.js 腳本 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.js"></script>
     <script>
+        // 1. 定義 Reveal.js 支援的特效清單
+        const transitions = ['fade', 'slide', 'convex', 'concave', 'zoom'];
+        
+        // 2. 抓取所有的簡報頁面 (section)
+        const sections = document.querySelectorAll('.slides > section');
+        
+        // 3. 為每一頁隨機指派一個特效屬性
+        sections.forEach(section => {
+            const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
+            section.setAttribute('data-transition', randomTransition);
+        });
+
+        // 4. 初始化 Reveal.js
         Reveal.initialize({
             hash: true,
             slideNumber: true,
-            // 啟用隨機換頁特效
-            transition: 'random' 
+            transition: 'slide' // 這裡作為備用預設值，實際播放會以上面指派的隨機特效為主
         });
     </script>
 </body>
