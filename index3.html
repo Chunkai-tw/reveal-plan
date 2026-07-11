@@ -81,19 +81,22 @@
             </div>
         </div>
 
-        <!-- Controls -->
-        <div class="w-full grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-6">
-            <!-- 手機版：翻面放第一排佔滿寬度。電腦版：放在中間 -->
-            <button onclick="nextState()" class="col-span-2 md:col-span-1 md:col-start-2 bg-white text-orange-500 hover:bg-gray-50 font-bold py-3 md:py-4 px-2 rounded-xl md:rounded-2xl shadow-xl transition-all active:scale-95 text-base md:text-lg border-b-4 border-orange-200 flex items-center justify-center order-1 md:order-2">
-                🔄 翻面 (或點擊卡片)
+        <!-- Controls (重新排版，確保手機版絕不遮擋) -->
+        <div class="w-full mt-6 flex flex-col gap-4">
+            <!-- 翻面按鈕 (放中間主要位置) -->
+            <button onclick="nextState()" class="w-full bg-white text-orange-500 hover:bg-gray-50 font-bold py-4 px-4 rounded-2xl shadow-xl transition-all active:scale-95 text-lg md:text-xl border-b-4 border-orange-200 flex items-center justify-center whitespace-nowrap">
+                🔄 翻面 (或直接點擊卡片)
             </button>
-            <!-- 上一題與下一題 -->
-            <button onclick="prevCard()" class="col-span-1 md:col-start-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-1 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-sm md:text-lg flex items-center justify-center gap-1 md:gap-2 order-2 md:order-1">
-                ⬅️ 上一題
-            </button>
-            <button onclick="nextCard()" class="col-span-1 md:col-start-3 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-1 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-sm md:text-lg flex items-center justify-center gap-1 md:gap-2 order-3">
-                下一題 ➡️
-            </button>
+            
+            <!-- 上一題與下一題 (移到最下方，並排不換行) -->
+            <div class="w-full flex justify-between gap-3 md:gap-4">
+                <button onclick="prevCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-base md:text-lg flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap">
+                    ⬅️ 上一題
+                </button>
+                <button onclick="nextCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-base md:text-lg flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap">
+                    下一題 ➡️
+                </button>
+            </div>
         </div>
 
     </main>
