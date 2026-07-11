@@ -14,6 +14,7 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            scroll-behavior: smooth; /* 讓自動捲動平滑 */
         }
         
         /* 卡片過渡動畫 */
@@ -31,7 +32,7 @@
             transform: scale(1) translateY(0);
         }
 
-        /* 自訂美化卷軸，讓手機/電腦都能明確看到可以滑動 */
+        /* 自訂美化卷軸 (現在套用於整個網頁) */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -52,10 +53,10 @@
 </head>
 <body class="text-gray-800 antialiased selection:bg-orange-300 selection:text-orange-900 pb-8">
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-5xl mx-auto">
+    <main class="flex-grow flex flex-col items-center justify-start p-4 md:p-8 w-full max-w-5xl mx-auto min-h-screen">
         
         <!-- Header -->
-        <header class="w-full flex justify-between items-center mb-4 md:mb-6 mt-4">
+        <header class="w-full flex justify-between items-center mb-4 md:mb-6 mt-2 md:mt-4">
             <h1 class="text-2xl md:text-3xl font-bold text-white drop-shadow-md">
                 🎓 主任考試特訓卡
             </h1>
@@ -69,40 +70,37 @@
             <div id="progress-bar" class="bg-white h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
         </div>
 
-        <!-- Card Container (調整高度邏輯，確保橫式時有足夠空間，直式時不過大) -->
-        <div class="relative w-full h-[55vh] min-h-[350px] md:min-h-[450px] perspective-1000 group cursor-pointer flex-shrink-0" onclick="nextState()">
-            <div id="flashcard" class="w-full h-full bg-white rounded-3xl shadow-2xl flex flex-col card-transition fade-in border-4 border-white/50 backdrop-blur-lg relative overflow-hidden">
+        <!-- Card Container (改為 h-auto，讓內容自然撐開卡片，徹底解決遮擋問題) -->
+        <div class="relative w-full h-auto min-h-[400px] md:min-h-[500px] flex flex-col perspective-1000 group cursor-pointer flex-shrink-0 transition-all duration-300" onclick="nextState()">
+            <div id="flashcard" class="w-full h-full flex-grow bg-white rounded-3xl shadow-2xl flex flex-col card-transition fade-in border-4 border-white/50 backdrop-blur-lg relative overflow-hidden">
                 
                 <!-- 狀態標籤 -->
                 <div id="layer-badge" class="absolute top-4 left-4 bg-orange-100 text-orange-600 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm z-10">
                     第 1 層：題目
                 </div>
 
-                <!-- 點擊提示 -->
-                <div class="absolute bottom-4 right-4 text-gray-400 text-sm md:text-base animate-pulse flex items-center gap-1 z-10 bg-white/80 px-2 py-1 rounded-full">
-                    點擊卡片翻頁 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
-                </div>
+                <!-- 取消了右下角的絕對定位提示，避免在長文章(第三頁)中擋住文字 -->
 
-                <!-- 卡片內容區 (改為獨立滾動，並保留上下 padding 避免被標籤與提示蓋住文字) -->
-                <div id="card-content" class="w-full h-full overflow-y-auto px-4 md:px-10 pt-16 pb-14 relative z-0">
+                <!-- 卡片內容區 (移除內部 scroll，增加上下 padding，讓文字自然舒展) -->
+                <div id="card-content" class="w-full h-full flex-grow flex flex-col justify-center px-5 md:px-10 py-20 relative z-0">
                     <!-- 內容將由 JS 動態填入 -->
                 </div>
             </div>
         </div>
 
-        <!-- Controls (外部按鈕，確保維持在卡片下方且不會重疊) -->
-        <div class="w-full mt-6 flex flex-col gap-3 md:gap-4 flex-shrink-0">
+        <!-- Controls (維持在卡片最下方，當卡片長高時會自然被往下推) -->
+        <div class="w-full mt-6 md:mt-8 flex flex-col gap-3 md:gap-4 flex-shrink-0">
             <!-- 翻面按鈕 -->
-            <button onclick="nextState()" class="w-full bg-white text-orange-500 hover:bg-gray-50 font-bold py-3 md:py-4 px-4 rounded-2xl shadow-xl transition-all active:scale-95 text-lg md:text-xl border-b-4 border-orange-200 flex items-center justify-center whitespace-nowrap">
+            <button onclick="nextState()" class="w-full bg-white text-orange-500 hover:bg-gray-50 font-bold py-4 md:py-5 px-4 rounded-2xl shadow-xl transition-all active:scale-95 text-xl md:text-2xl border-b-4 border-orange-200 flex items-center justify-center whitespace-nowrap">
                 🔄 翻面 (或直接點擊卡片)
             </button>
             
             <!-- 上一題與下一題 -->
             <div class="w-full flex justify-between gap-3 md:gap-4">
-                <button onclick="prevCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-base md:text-lg flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap">
+                <button onclick="prevCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 md:py-4 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-lg md:text-xl flex items-center justify-center gap-2 whitespace-nowrap">
                     ⬅️ 上一題
                 </button>
-                <button onclick="nextCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-base md:text-lg flex items-center justify-center gap-1 md:gap-2 whitespace-nowrap">
+                <button onclick="nextCard()" class="flex-1 bg-white/20 hover:bg-white/40 text-white font-bold py-3 md:py-4 px-2 md:px-6 rounded-xl md:rounded-2xl backdrop-blur-md transition-all shadow-lg active:scale-95 border border-white/30 text-lg md:text-xl flex items-center justify-center gap-2 whitespace-nowrap">
                     下一題 ➡️
                 </button>
             </div>
@@ -353,7 +351,7 @@
         let currentIndex = 0;
         let currentState = 0; // 0: 題目, 1: 口訣, 2: 細節
 
-        // Fisher-Yates Shuffle 洗牌演算法 (隨機打亂)
+        // Fisher-Yates Shuffle 洗牌演算法
         function shuffle(array) {
             let currentIndex = array.length, randomIndex;
             while (currentIndex > 0) {
@@ -384,26 +382,21 @@
             // 等待淡出後更新內容並淡入
             setTimeout(() => {
                 if (currentState === 0) {
-                    // 第 1 層：題號 + 題目 (字體放大，水平垂直置中)
                     badge.innerText = "第 1 層：題目";
                     badge.className = "absolute top-4 left-4 bg-blue-100 text-blue-700 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm z-10";
-                    contentDiv.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center"><h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight px-2">${card.title}</h2></div>`;
+                    contentDiv.innerHTML = `<h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight text-center">${card.title}</h2>`;
                 } else if (currentState === 1) {
-                    // 第 2 層：記憶口訣 (字體放大，水平垂直置中)
                     badge.innerText = "第 2 層：記憶口訣";
                     badge.className = "absolute top-4 left-4 bg-orange-100 text-orange-600 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm z-10";
-                    contentDiv.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center"><h2 class="text-5xl md:text-7xl font-black text-orange-600 tracking-widest drop-shadow-md px-2">${card.mnemonic}</h2></div>`;
+                    contentDiv.innerHTML = `<h2 class="text-5xl md:text-7xl font-black text-orange-600 tracking-widest drop-shadow-md text-center">${card.mnemonic}</h2>`;
                 } else if (currentState === 2) {
-                    // 第 3 層：細節與重點 (改為由上到下自然排列，解決長文切邊與無法滑動的問題)
                     badge.innerText = "第 3 層：關鍵字與重點";
                     badge.className = "absolute top-4 left-4 bg-green-100 text-green-700 text-sm md:text-base font-bold px-3 py-1 rounded-full shadow-sm z-10";
                     
-                    // 將換行符號 \n 拆分成段落
                     const detailsList = card.details.split('\n').map(item => 
                         `<li class="mb-4 text-left text-lg md:text-xl font-medium text-gray-700 leading-relaxed">${item}</li>`
                     ).join('');
                     
-                    // 不使用 items-center，讓 ul 貼合頂部自然延伸，配合 overflow-y-auto 順暢滾動
                     contentDiv.innerHTML = `<ul class="w-full list-none m-0 p-0">${detailsList}</ul>`;
                 }
 
@@ -411,8 +404,8 @@
                 document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${cards.length}`;
                 document.getElementById('progress-bar').style.width = `${((currentIndex + 1) / cards.length) * 100}%`;
 
-                // 切換後自動回到卷軸頂端
-                contentDiv.scrollTop = 0;
+                // 切換後自動回到整個網頁頂端，確保不會一開始就看到最底下
+                window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 // 觸發淡入動畫
                 flashcard.classList.remove('fade-out');
@@ -435,11 +428,10 @@
                 currentState = 0;
                 updateUI();
             } else {
-                // 完成全部
                 const contentDiv = document.getElementById('card-content');
                 document.getElementById('layer-badge').style.display = 'none';
                 contentDiv.innerHTML = `
-                    <div class="w-full h-full flex flex-col items-center justify-center text-center">
+                    <div class="text-center">
                         <div class="text-6xl mb-4">🎉</div>
                         <h2 class="text-3xl md:text-5xl font-extrabold text-orange-600 mb-4">恭喜完成所有卡片！</h2>
                         <p class="text-xl text-gray-600 mb-8">您已經複習完本輪所有重點。</p>
@@ -452,11 +444,9 @@
 
         function prevCard() {
             if (currentState > 0) {
-                // 如果在第2層或第3層，先退回上一層
                 currentState--;
                 updateUI();
             } else if (currentIndex > 0) {
-                // 如果在第1層，退回上一題的第3層
                 currentIndex--;
                 currentState = 2;
                 updateUI();
@@ -474,7 +464,6 @@
             }
         });
 
-        // 啟動應用程式
         window.onload = init;
     </script>
 </body>
